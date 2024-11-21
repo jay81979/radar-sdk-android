@@ -64,14 +64,14 @@ internal class RadarVerificationManager(
         val verificationManager = this
         val lastTokenBeacons = beacons
 
-        val profiler = RadarProfiler()
-        profiler.start("total")
-        profiler.start("getConfig")
+        val telemetry = RadarTelemetry()
+        telemetry.start("total")
+        telemetry.start("getConfig")
 
         val usage = "trackVerified"
         Radar.apiClient.getConfig(usage, true, object : RadarApiClient.RadarGetConfigApiCallback {
             override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                profiler.end("getConfig")
+                telemetry.end("getConfig")
                 if (status != Radar.RadarStatus.SUCCESS || config == null) {
                     Radar.handler.post {
                         callback?.onComplete(status)
@@ -82,7 +82,7 @@ internal class RadarVerificationManager(
 
                 val googlePlayProjectNumber = config.googlePlayProjectNumber
 
-                profiler.start("getLocation")
+                telemetry.start("getLocation")
 
                 Radar.locationManager.getLocation(
                     RadarTrackingOptions.RadarTrackingOptionsDesiredAccuracy.MEDIUM,
@@ -94,7 +94,7 @@ internal class RadarVerificationManager(
                             location: Location?,
                             stopped: Boolean
                         ) {
-                            profiler.end("getLocation")
+                            telemetry.end("getLocation")
 
                             if (status != Radar.RadarStatus.SUCCESS || location == null) {
                                 Radar.handler.post {
@@ -104,7 +104,7 @@ internal class RadarVerificationManager(
                                 return
                             }
 
-                            profiler.start("getIntegrityToken")
+                            telemetry.start("getIntegrityToken")
 
                             val requestHash = verificationManager.getRequestHash(location)
 
@@ -113,10 +113,10 @@ internal class RadarVerificationManager(
                                 requestHash
                             ) { integrityToken, integrityException ->
 
-                                profiler.end("getIntegrityToken")
+                                telemetry.end("getIntegrityToken")
 
                                 val callTrackApi = { beacons: Array<RadarBeacon>? ->
-                                    profiler.start("trackAPI")
+                                    telemetry.start("trackAPI")
                                     Radar.apiClient.track(
                                         location,
                                         RadarState.getStopped(verificationManager.context),
@@ -140,7 +140,7 @@ internal class RadarVerificationManager(
                                                 config: RadarConfig?,
                                                 token: RadarVerifiedLocationToken?
                                             ) {
-                                                profiler.end("trackAPI")
+                                                telemetry.end("trackAPI")
                                                 if (status == Radar.RadarStatus.SUCCESS) {
                                                     Radar.locationManager.updateTrackingFromMeta(
                                                         config?.meta
@@ -152,8 +152,8 @@ internal class RadarVerificationManager(
                                                     verificationManager.lastTokenBeacons = lastTokenBeacons
                                                 }
 
-                                                profiler.end("total")
-                                                logger.i("trackVerified | ${profiler.formatted()}", Radar.RadarLogType.PROFILER)
+                                                telemetry.end("total")
+                                                logger.i("trackVerified | ${telemetry.formatted()}", Radar.RadarLogType.TELEMETRY)
 
                                                 Radar.handler.post {
                                                     callback?.onComplete(
@@ -167,7 +167,7 @@ internal class RadarVerificationManager(
 
                                 if (beacons && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-                                    profiler.start("searchBeacons")
+                                    telemetry.start("searchBeacons")
                                     Radar.apiClient.searchBeacons(
                                         location,
                                         1000,
@@ -180,7 +180,7 @@ internal class RadarVerificationManager(
                                                 uuids: Array<String>?,
                                                 uids: Array<String>?
                                             ) {
-                                                profiler.end("searchBeacons")
+                                                telemetry.end("searchBeacons")
                                                 if (!uuids.isNullOrEmpty() || !uids.isNullOrEmpty()) {
                                                     Radar.beaconManager.startMonitoringBeaconUUIDs(
                                                         uuids,
@@ -202,7 +202,7 @@ internal class RadarVerificationManager(
                                                                     return
                                                                 }
 
-                                                                profiler.start("trackAPI")
+                                                                telemetry.start("trackAPI")
                                                                 callTrackApi(beacons)
                                                             }
                                                         })
@@ -210,7 +210,7 @@ internal class RadarVerificationManager(
                                                     Radar.beaconManager.startMonitoringBeacons(
                                                         beacons
                                                     )
-                                                    profiler.start("rangeBeacons")
+                                                    telemetry.start("rangeBeacons")
                                                     Radar.beaconManager.rangeBeacons(
                                                         beacons,
                                                         false,
@@ -219,7 +219,7 @@ internal class RadarVerificationManager(
                                                                 status: Radar.RadarStatus,
                                                                 beacons: Array<RadarBeacon>?
                                                             ) {
-                                                                profiler.end("rangeBeacons")
+                                                                telemetry.end("rangeBeacons")
 
                                                                 if (status != Radar.RadarStatus.SUCCESS || beacons == null) {
                                                                     callTrackApi(null)

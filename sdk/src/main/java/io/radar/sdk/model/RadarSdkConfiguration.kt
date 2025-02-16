@@ -1,9 +1,5 @@
 package io.radar.sdk.model
-
-import android.content.Context
 import io.radar.sdk.Radar
-import io.radar.sdk.RadarApiClient
-import io.radar.sdk.RadarSettings
 import org.json.JSONObject
 
 /**
@@ -57,18 +53,6 @@ internal data class RadarSdkConfiguration(
                 config.optBoolean(USE_OPENED_APP_CONVERSION, true),
                 config.optBoolean(USE_FOREGROUND_LOCATION_UPDATED_AT_MS_DIFF, false),
             )
-        }
-
-        fun updateSdkConfigurationFromServer(context: Context) {
-            Radar.apiClient.getConfig("sdkConfigUpdate", false, object : RadarApiClient.RadarGetConfigApiCallback {
-                override fun onComplete(status: Radar.RadarStatus, config: RadarConfig?) {
-                    if (config == null) {
-                        return
-                    }
-
-                    RadarSettings.setSdkConfiguration(context, config.meta.sdkConfiguration)
-                }
-            })
         }
     }
 

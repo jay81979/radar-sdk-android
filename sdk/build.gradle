@@ -1,37 +1,15 @@
-import io.radar.ci.GitHubActions
-import io.radar.ci.GitHubClient
-import io.radar.ci.SnapshotDispatcher
-import io.radar.mvnpublish.MavenServer
-
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
-apply plugin: "kotlin-android-extensions"
-apply plugin: "org.jetbrains.dokka"
-apply plugin: 'io.radar.mvnpublish'
 
 ext {
     radarVersion = '3.18.10'
-}
-
-String buildNumber = ".${System.currentTimeMillis()}"
-GitHubActions githubRelease = GitHubActions.get()
-boolean isSnapshot = false
-if (githubRelease) {
-    if (githubRelease.snapshot) {
-        // Use the existing radarVersion with the -SNAPSHOT suffix
-        isSnapshot = true
-        buildNumber = '-SNAPSHOT'
-    } else {
-        buildNumber = ''
-        // Use the tag from the release name as the version-to-publish / include in source code
-        ext.radarVersion = githubRelease.tag
-    }
+    kotlin_version = "1.6.20"
 }
 
 android {
-    compileSdkVersion 34
+    namespace = "io.radar.sdk"
+    compileSdk 34
     compileOptions {
-        coreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -40,7 +18,6 @@ android {
     }
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 34
         buildConfigField "String", "VERSION_NAME", "\"$radarVersion\""
         multiDexEnabled = true
     }
@@ -58,11 +35,13 @@ android {
     lintOptions {
         warningsAsErrors true
     }
+    buildFeatures {
+        buildConfig = true
+    }
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
-    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation "androidx.appcompat:appcompat:1.4.0"
     implementation "androidx.core:core-ktx:1.7.0"
@@ -75,62 +54,4 @@ dependencies {
     testImplementation "org.robolectric:robolectric:4.10"
     testImplementation 'org.json:json:20211205'
     testImplementation "com.google.android.play:integrity:1.2.0"
-}
-
-task androidSourcesJar(type: Jar) {
-    group 'publishing'
-    archiveClassifier.set("sources")
-    from android.sourceSets.main.java.srcDirs
-}
-
-dokkaHtml.configure {
-    outputDirectory.set(file("$rootDir/docs"))
-
-    dokkaSourceSets {
-        named("main") {
-            noAndroidSdkLink.set(false)
-        }
-    }
-}
-
-dokkaJavadoc.configure {
-    outputDirectory.set(file("$buildDir/javadocs"))
-}
-
-task androidJavadocsJar(type: Jar, dependsOn: dokkaJavadoc) {
-    group 'publishing'
-    archiveClassifier.set("javadoc")
-    from dokkaJavadoc.outputDirectory
-}
-
-artifacts {
-    archives androidSourcesJar, androidJavadocsJar
-}
-
-mvnpublish {
-    publication {
-        name = 'Radar Android SDK'
-        description = 'Android SDK for Radar, the leading geofencing and location tracking platform'
-        repositoryName = 'radar-sdk-android'
-        group = 'io.radar'
-        artifactId = 'sdk'
-        version = "$radarVersion$buildNumber"
-        artifacts = ["$buildDir/outputs/aar/$project.name-release.aar", androidSourcesJar, androidJavadocsJar]
-        server = isSnapshot ? MavenServer.SNAPSHOT : MavenServer.RELEASE
-    }
-}
-
-task dispatchSnapshot {
-    group 'ci'
-    description 'Send event to notify listeners that a new SNAPSHOT build has been published.'
-    String username = System.getenv('PAT_USERNAME')
-    String password = System.getenv('PAT_TOKEN')
-    doLast {
-        GitHubClient.ApiResponse result = SnapshotDispatcher.dispatchSnapshotEvent(username, password, "$radarVersion$buildNumber")
-        if (result.success) {
-            logger.debug("Successfully sent repository dispatch ($result.status)!")
-        } else {
-            logger.log(LogLevel.ERROR, "Could not send repository dispatch! $result.status: ${result.message ?: ''}\n ${result.data ?: ''}")
-        }
-    }
 }

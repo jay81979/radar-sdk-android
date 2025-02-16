@@ -156,7 +156,7 @@ class RadarJobScheduler : JobService() {
                 this.time = time
             }
 
-            if (Radar.isTestKey()) {
+            if (BuildConfig.DEBUG) {
                 val batteryState = Radar.batteryManager.getBatteryState()
                 Radar.logger.d(
                     "Starting location job | " +

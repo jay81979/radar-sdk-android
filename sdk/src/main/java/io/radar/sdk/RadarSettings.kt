@@ -10,7 +10,7 @@ import java.util.UUID
 
 internal object RadarSettings {
 
-    private const val KEY_PUBLISHABLE_KEY = "publishable_key"
+    //private const val KEY_PUBLISHABLE_KEY = "publishable_key"
     private const val KEY_LOCATION_SERVICES_PROVIDER = "provider"
     private const val KEY_INSTALL_ID = "install_id"
     private const val KEY_SESSION_ID = "session_id"
@@ -23,14 +23,12 @@ internal object RadarSettings {
     private const val KEY_TRACKING = "background_tracking"
     private const val KEY_TRACKING_OPTIONS = "tracking_options"
     private const val KEY_PREVIOUS_TRACKING_OPTIONS = "previous_tracking_options"
-    private const val KEY_REMOTE_TRACKING_OPTIONS = "remote_tracking_options"
     private const val KEY_FOREGROUND_SERVICE = "foreground_service"
     private const val KEY_NOTIFICATION_OPTIONS = "notification_options"
     private const val KEY_CLIENT_SDK_CONFIGURATION = "client_sdk_configuration"
     private const val KEY_SDK_CONFIGURATION = "sdk_configuration"
     private const val KEY_TRIP_OPTIONS = "trip_options"
     private const val KEY_LOG_LEVEL = "log_level"
-    private const val KEY_HOST = "host"
     private const val KEY_PERMISSIONS_DENIED = "permissions_denied"
     private const val KEY_LAST_TRACKED_TIME = "last_tracked_time"
     private const val KEY_VERIFIED_HOST = "verified_host"
@@ -49,13 +47,13 @@ internal object RadarSettings {
         return context.getSharedPreferences("RadarSDK", Context.MODE_PRIVATE)
     }
 
-    internal fun getPublishableKey(context: Context): String? {
-        return getSharedPreferences(context).getString(KEY_PUBLISHABLE_KEY, null)
-    }
-
-    internal fun setPublishableKey(context: Context, publishableKey: String?) {
-        getSharedPreferences(context).edit { putString(KEY_PUBLISHABLE_KEY, publishableKey) }
-    }
+//    internal fun getPublishableKey(context: Context): String? {
+//        return getSharedPreferences(context).getString(KEY_PUBLISHABLE_KEY, null)
+//    }
+//
+//    internal fun setPublishableKey(context: Context, publishableKey: String?) {
+//        getSharedPreferences(context).edit { putString(KEY_PUBLISHABLE_KEY, publishableKey) }
+//    }
 
     internal fun getLocationServicesProvider(context: Context): String? {
         return getSharedPreferences(context).getString(KEY_LOCATION_SERVICES_PROVIDER, null)
@@ -214,20 +212,6 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { remove(KEY_PREVIOUS_TRACKING_OPTIONS) }
     }
 
-    internal fun getRemoteTrackingOptions(context: Context): RadarTrackingOptions? {
-        val keyExists = getSharedPreferences(context).contains(KEY_REMOTE_TRACKING_OPTIONS)
-        return if (keyExists) getTrackingOptionsByKey(context, KEY_REMOTE_TRACKING_OPTIONS) else null
-    }
-
-    internal fun setRemoteTrackingOptions(context: Context, options: RadarTrackingOptions) {
-        val optionsJson = options.toJson().toString()
-        getSharedPreferences(context).edit { putString(KEY_REMOTE_TRACKING_OPTIONS, optionsJson) }
-    }
-
-    internal fun removeRemoteTrackingOptions(context: Context) {
-        getSharedPreferences(context).edit { remove(KEY_REMOTE_TRACKING_OPTIONS) }
-    }
-
     internal fun setNotificationOptions(context:Context,notificationOptions:RadarNotificationOptions){
         val notificationOptionsJson = notificationOptions.toJson().toString()
         getSharedPreferences(context).edit { putString(KEY_NOTIFICATION_OPTIONS, notificationOptionsJson) }
@@ -338,9 +322,9 @@ internal object RadarSettings {
         getSharedPreferences(context).edit { putInt(KEY_LOG_LEVEL, level.value) }
     }
 
-    internal fun getHost(context: Context): String {
-        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
-    }
+//    internal fun getHost(context: Context): String {
+//        return getSharedPreferences(context).getString(KEY_HOST, null) ?: "https://api.radar.io"
+//    }
 
     internal fun setPermissionsDenied(context: Context, denied: Boolean) {
         getSharedPreferences(context).edit { putBoolean(KEY_PERMISSIONS_DENIED, denied) }
